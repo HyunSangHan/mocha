@@ -39,7 +39,7 @@ var originalOnerrorHandler = global.onerror;
  */
 
 process.removeListener = function(e, fn) {
-  if (e === 'uncaughtException') {
+  if (e === 'uncaughtException' || e === 'unhandledRejection') {
     if (originalOnerrorHandler) {
       global.onerror = originalOnerrorHandler;
     } else {

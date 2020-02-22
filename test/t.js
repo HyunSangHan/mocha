@@ -25,7 +25,7 @@ describe('Promise Rejection에 대한 실험', function() {
     });
   });
 
-  it.only('[실험4] resolve된 promise를 return한 경우)', function() {
+  it('[실험4] resolve된 promise를 return한 경우)', function() {
     // eslint-disable-next-line no-new
     new Promise(function(resolve, reject) {
       // eslint-disable-next-line prefer-promise-reject-errors
@@ -36,15 +36,19 @@ describe('Promise Rejection에 대한 실험', function() {
     });
   });
 
-  it('[실험5] reject된 promise를 catch해주지 않았으므로 UnhandledPromiseRejection이 발생하지만, Mocha가 이를 인지하지 못하여 테스트가 pass되고 있다.(문제상황은 바로 이것인 듯하다.)', function() {
+  it.only('[실험5] setTimeout', function(done) {
+    setTimeout(function() {
+      throw new Error("test")
+    }, 0)
+    return done();
     // eslint-disable-next-line no-new
-    new Promise(function(resolve, reject) {
-      // eslint-disable-next-line prefer-promise-reject-errors
-      reject('UnhandledRejection이 발생하였다');
-    });
-    return new Promise(function(resolve, reject) {
-      reject('리젝트된 프로미스')
-    });
+    // new Promise(function(resolve, reject) {
+    //   // eslint-disable-next-line prefer-promise-reject-errors
+    //   reject('UnhandledRejection이 발생하였다');
+    // });
+    // return new Promise(function(resolve, reject) {
+    //   reject('리젝트된 프로미스')
+    // });
   });
 
 });
