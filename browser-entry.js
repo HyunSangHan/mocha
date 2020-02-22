@@ -62,8 +62,13 @@ process.on = function(e, fn) {
       fn(new Error(err + ' (' + url + ':' + line + ')'));
       return !mocha.options.allowUncaught;
     };
-    uncaughtExceptionHandlers.push(fn);
-  }
+  } else if (e === 'unhandledRejection') {
+    global.onerror = function(err, url, line) {
+      fn(new Error(err + ' (' + url + ':' + line + ')'));
+      return !mocha.options.allowUnhandled;
+    };
+  };
+  uncaughtExceptionHandlers.push(fn);
 };
 
 // The BDD UI is registered by default, but no UI will be functional in the

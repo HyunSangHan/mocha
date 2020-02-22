@@ -544,6 +544,89 @@ describe('Runner', function() {
     });
   });
 
+  describe('allowUnhandled', function() {
+    it('should allow unhandled errors to propagate through', function() {
+      var newRunner = new Runner(suite);
+      newRunner.allowUnhandled = true;
+      newRunner.test = new Test('failing test', function() {
+        throw new Error('allow unhandled errors');
+      });
+      function fail() {
+        newRunner.runTest();
+      }
+      expect(fail, 'to throw', 'allow unhandled errors');
+    });
+
+    it('should not allow unhandled errors in sync hooks to propagate through', function(done) {
+      suite.beforeEach(function() {
+        throw new Error();
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = false;
+
+      // We are monkey patching here with runner.once and a hook.run wrapper to effectively
+      // capture thrown errors within the event loop phase where Runner.immediately executes
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          expect(throwError, 'not to throw');
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+
+    it('should allow unhandled errors in sync hooks to propagate through', function(done) {
+      suite.beforeEach(function() {
+        throw new Error('allow unhandled errors in sync hooks');
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = true;
+
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          var expected = 'allow unhandled errors in sync hooks';
+          expect(throwError, 'to throw', expected);
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+
+    it('async - should allow unhandled errors in hooks to propagate through', function(done) {
+      // the `done` argument, although unused, it triggers the async path
+      // see this.async in the Runnable constructor
+      suite.beforeEach(function(done) {
+        throw new Error('allow unhandled errors in async hooks');
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = true;
+
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          var expected = 'allow unhandled errors in async hooks';
+          expect(throwError, 'to throw', expected);
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+  });
+
   describe('stackTrace', function() {
     var stack = [
       'AssertionError: foo bar',
@@ -716,6 +799,22 @@ describe('Runner', function() {
         expect(
           function() {
             runner.uncaught(err);
+          },
+          'to throw',
+          'should rethrow err'
+        );
+      });
+    });
+
+    describe('when allow-unhandled is set to true', function() {
+      it('should propagate rejection and throw', function() {
+        if (process.browser) this.skip();
+
+        var err = new Error('should rethrow err');
+        runner.allowUnhandled = true;
+        expect(
+          function() {
+            runner.unhandled(err);
           },
           'to throw',
           'should rethrow err'

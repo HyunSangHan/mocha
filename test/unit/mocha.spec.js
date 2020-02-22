@@ -70,6 +70,25 @@ describe('Mocha', function() {
     });
   });
 
+  describe('#allowUnhandled()', function() {
+    it('should set the allowUnhandled option to true', function() {
+      var mocha = new Mocha(opts);
+      mocha.allowUnhandled();
+      expect(mocha.options, 'to have property', 'allowUnhandled', true);
+    });
+
+    it('should set the allowUnhandled option to false', function() {
+      var mocha = new Mocha(opts);
+      mocha.allowUnhandled(false);
+      expect(mocha.options, 'to have property', 'allowUnhandled', false);
+    });
+
+    it('should be chainable', function() {
+      var mocha = new Mocha(opts);
+      expect(mocha.allowUnhandled(), 'to be', mocha);
+    });
+  });
+
   describe('#asyncOnly()', function() {
     it('should set the asyncOnly option to true', function() {
       var mocha = new Mocha(opts);
