@@ -39,7 +39,7 @@ var originalOnerrorHandler = global.onerror;
  */
 
 process.removeListener = function(e, fn) {
-  if (e === 'uncaughtException') {
+  if (e === 'uncaughtException' || e === 'unhandledRejection') {
     if (originalOnerrorHandler) {
       global.onerror = originalOnerrorHandler;
     } else {
@@ -63,7 +63,13 @@ process.on = function(e, fn) {
       return !mocha.options.allowUncaught;
     };
     uncaughtExceptionHandlers.push(fn);
-  }
+  } else if (e === 'unhandledRejection') {
+    global.onerror = function(err, url, line) {
+      fn(new Error(err + ' (' + url + ':' + line + ')'));
+      return !mocha.options.allowUnhandled;
+    };
+    uncaughtExceptionHandlers.push(fn);
+  };
 };
 
 // The BDD UI is registered by default, but no UI will be functional in the

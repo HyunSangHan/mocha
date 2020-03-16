@@ -392,6 +392,21 @@ describe('Runnable(title, fn)', function() {
               });
             });
 
+            describe('when an rejection is thrown and is allowed to remain unhandled', function() {
+              it('throws an error when it is allowed', function(done) {
+                var runnable = new Runnable('foo', function(done) {
+                  throw new Error('fail');
+                });
+                runnable.allowUnhandled = true;
+      
+                function fail() {
+                  runnable.run(function() {});
+                }
+                expect(fail, 'to throw', 'fail');
+                done();
+              });
+            });
+
             runnable.run(callbackSpy);
           });
         });

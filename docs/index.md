@@ -832,6 +832,7 @@ Commands
 
 Rules & Behavior
   --allow-uncaught           Allow uncaught errors to propagate        [boolean]
+  --allow-unhandled          Allow unhandled rejections to propagate   [boolean]
   --async-only, -A           Require all tests to use a callback (async) or
                              return a Promise                          [boolean]
   --bail, -b                 Abort ("bail") after first test failure   [boolean]
@@ -909,6 +910,13 @@ Mocha Resources
 ### `--allow-uncaught`
 
 By default, Mocha will attempt to trap uncaught exceptions thrown from running tests and report these as test failures. Use `--allow-uncaught` to disable this behavior and allow uncaught exceptions to propagate. Will typically cause the process to crash.
+
+This flag is useful when debugging particularly difficult-to-track exceptions.
+
+
+### `--allow-unhandled`
+
+By default, Mocha will attempt to trap unhandled rejections thrown from running tests and report these as test failures. Use `--allow-unhandled` to disable this behavior and allow unhandled rejections to propagate. Will typically cause the process to crash.
 
 This flag is useful when debugging particularly difficult-to-track exceptions.
 

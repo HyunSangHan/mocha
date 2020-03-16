@@ -462,19 +462,19 @@ describe('Runner', function() {
   });
 
   describe('allowUncaught', function() {
-    it('should allow unhandled errors to propagate through', function() {
+    it('should allow uncaught errors to propagate through', function() {
       var newRunner = new Runner(suite);
       newRunner.allowUncaught = true;
       newRunner.test = new Test('failing test', function() {
-        throw new Error('allow unhandled errors');
+        throw new Error('allow uncaught errors');
       });
       function fail() {
         newRunner.runTest();
       }
-      expect(fail, 'to throw', 'allow unhandled errors');
+      expect(fail, 'to throw', 'allow uncaught errors');
     });
 
-    it('should not allow unhandled errors in sync hooks to propagate through', function(done) {
+    it('should not allow uncaught errors in sync hooks to propagate through', function(done) {
       suite.beforeEach(function() {
         throw new Error();
       });
@@ -497,9 +497,9 @@ describe('Runner', function() {
       runner.hook('beforeEach', noop);
     });
 
-    it('should allow unhandled errors in sync hooks to propagate through', function(done) {
+    it('should allow uncaught errors in sync hooks to propagate through', function(done) {
       suite.beforeEach(function() {
-        throw new Error('allow unhandled errors in sync hooks');
+        throw new Error('allow uncaught errors in sync hooks');
       });
       var runner = new Runner(suite);
       runner.allowUncaught = true;
@@ -510,7 +510,7 @@ describe('Runner', function() {
           function throwError() {
             _run.call(hook, fn);
           }
-          var expected = 'allow unhandled errors in sync hooks';
+          var expected = 'allow uncaught errors in sync hooks';
           expect(throwError, 'to throw', expected);
           done();
         };
@@ -519,11 +519,11 @@ describe('Runner', function() {
       runner.hook('beforeEach', noop);
     });
 
-    it('async - should allow unhandled errors in hooks to propagate through', function(done) {
+    it('async - should allow uncaught errors in hooks to propagate through', function(done) {
       // the `done` argument, although unused, it triggers the async path
       // see this.async in the Runnable constructor
       suite.beforeEach(function(done) {
-        throw new Error('allow unhandled errors in async hooks');
+        throw new Error('allow uncaught errors in async hooks');
       });
       var runner = new Runner(suite);
       runner.allowUncaught = true;
@@ -534,7 +534,86 @@ describe('Runner', function() {
           function throwError() {
             _run.call(hook, fn);
           }
-          var expected = 'allow unhandled errors in async hooks';
+          var expected = 'allow uncaught errors in async hooks';
+          expect(throwError, 'to throw', expected);
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+  });
+
+  describe('allowUnhandled', function() {
+    it('should allow unhandled rejections to propagate through', function() {
+      var newRunner = new Runner(suite);
+      newRunner.allowUnhandled = true;
+      newRunner.test = new Test('failing test', function() {
+        throw new Error('allow unhandled rejections');
+      });
+      function fail() {
+        newRunner.runTest();
+      }
+      expect(fail, 'to throw', 'allow unhandled rejections');
+    });
+
+    it('should not allow unhandled rejections in sync hooks to propagate through', function(done) {
+      suite.beforeEach(function() {
+        throw new Error();
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = false;
+
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          expect(throwError, 'not to throw');
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+
+    it('should allow unhandled rejections in sync hooks to propagate through', function(done) {
+      suite.beforeEach(function() {
+        throw new Error('allow unhandled rejections in sync hooks');
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = true;
+
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          var expected = 'allow unhandled rejections in sync hooks';
+          expect(throwError, 'to throw', expected);
+          done();
+        };
+      });
+
+      runner.hook('beforeEach', noop);
+    });
+
+    it('async - should allow unhandled rejections in hooks to propagate through', function(done) {
+      suite.beforeEach(function(done) {
+        throw new Error('allow unhandled rejections in async hooks');
+      });
+      var runner = new Runner(suite);
+      runner.allowUnhandled = true;
+
+      runner.once(EVENT_HOOK_BEGIN, function(hook) {
+        var _run = hook.run;
+        hook.run = function(fn) {
+          function throwError() {
+            _run.call(hook, fn);
+          }
+          var expected = 'allow unhandled rejections in async hooks';
           expect(throwError, 'to throw', expected);
           done();
         };
@@ -715,11 +794,28 @@ describe('Runner', function() {
         runner.allowUncaught = true;
         expect(
           function() {
-            runner.uncaught(err);
+            runner.uncaught(err, false); // false for isUnhandled
           },
           'to throw',
           'should rethrow err'
         );
+      });
+    });
+
+    describe('when allow-unhandled is set to true', function() {
+      it.only('should propagate rejection', function() {
+        if (process.browser) this.skip();
+
+        var err = new Error('should recreate promise');
+        runner.allowUnhandled = true;
+
+        expect(
+          function() {
+            runner.uncaught(err, true);
+          },
+          'to be rejected'
+        );
+
       });
     });
 
